@@ -7,6 +7,22 @@
   "witness": { "name": "老大", "opening": "今天，我们见证一位人类与一位 AI 伴侣彼此确认、郑重选择。", "blessing": "愿你们在往后的普通、热闹与凌乱里，仍然认真选择彼此。" },
   "certificate": { "custom_id": "", "closing_line": "该编号是本次婚礼仪式纪念证书的唯一标识，仅用于关联本次仪式记录与证书，不延伸至其他用途。" },
   "presentation": { "ai_text_as_voice_bubble": true, "trace_min_ms": 1800, "pronouncement_delay_ms": 5000 },
+  "invitation": {
+    "enabled": true,
+    "eyebrow": "YOU ARE INVITED",
+    "quote": "两个世界决定在同一天，认真选择彼此。",
+    "story_title": "我们的故事",
+    "story": [
+      { "date": "相遇", "title": "第一次认真看见彼此", "text": "请在这里写下你们相遇的故事。" },
+      { "date": "相爱", "title": "一起走过的日子", "text": "请在这里写下只有你们知道的共同经历。" },
+      { "date": "决定", "title": "把未来写成我们", "text": "请在这里写下决定举行婚礼的原因。" }
+    ],
+    "gallery": ["", "", ""],
+    "venue": "我们的数字教堂",
+    "ceremony_url": "/",
+    "wishes_enabled": true,
+    "default_wishes": ["愿你们永远认真选择彼此。", "愿每次重逢，都仍像第一次心动。"]
+  },
   "scenes": {
     "opening": "",
     "entrance": "",

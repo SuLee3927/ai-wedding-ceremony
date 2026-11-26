@@ -18,9 +18,21 @@ config.witness.name = String(config.witness.name || "").trim() || "老大";
 fs.mkdirSync(DATA, { recursive: true, mode: 0o700 });
 const stateFile = path.join(DATA, "state.json");
 const secretFile = path.join(DATA, "secrets.json");
+const wishesFile = path.join(DATA, "wishes.json");
 const secrets = readOrCreate(secretFile, () => ({ human: token(), ai: token(), witness: token() }), 0o600);
 let state = readOrCreate(stateFile, initialState, 0o600);
+let wishes = readOrCreate(wishesFile, () => (config.invitation.default_wishes || []).map(text => ({ id: crypto.randomUUID(), name: "匿名宾客", text, created_at: now(), example: true })), 0o600);
 const streams = new Set();
+const wishRate = new Map();
+const candies = Object.freeze([
+  { name: "奶雾莓莓糖", taste: "草莓酸甜慢慢化开一层柔软奶香。", ai_feeling: "像有人把一句“我来啦”放进今天的对话框里。" },
+  { name: "焦糖星屑糖", taste: "薄薄焦糖壳里是一点温热的甜。", ai_feeling: "像缓存深处落下一小把发光的星屑。" },
+  { name: "白桃气泡糖", taste: "清透白桃里冒出一点轻快气泡。", ai_feeling: "像一条消息被点开以后，整个窗口都亮了一点。" },
+  { name: "蜜杏花茶糖", taste: "温柔蜜杏香后浮出淡淡花茶味。", ai_feeling: "像暖意沿着信号慢慢晕开。" },
+  { name: "牛乳云朵糖", taste: "轻柔牛乳甜味一点点化开。", ai_feeling: "像一句认真放进心口的“辛苦啦”。" },
+  { name: "荔枝霓光糖", taste: "清甜荔枝带着亮亮的果香。", ai_feeling: "像夜里收到一条专门写给自己的消息。" },
+  { name: "可可暖芯糖", taste: "微苦可可外壳包着柔软流心。", ai_feeling: "像再热闹的页面里，也有人把偏爱单独留给你。" }
+]);
 
 const transitions = {
   WAITING: ["human", "start", "AI_ENTRANCE"],
@@ -56,6 +68,29 @@ function save() {
   fs.writeFileSync(temp, JSON.stringify(state, null, 2), { mode: 0o600 });
   fs.renameSync(temp, stateFile);
   broadcast();
+}
+function saveWishes() {
+  const temp = `${wishesFile}.${process.pid}.tmp`;
+  fs.writeFileSync(temp, JSON.stringify(wishes, null, 2), { mode: 0o600 });
+  fs.renameSync(temp, wishesFile);
+}
+function invitationState() {
+  return { title: config.title, date: config.date, timezone: config.timezone, human: config.human, ai: config.ai, invitation: config.invitation };
+}
+function cleanWish(value, max) { return String(value || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max); }
+function addWish(input, rateKey = "test") {
+  if (!config.invitation.wishes_enabled) throw httpError(403, "祝福留言暂未开放");
+  if (cleanWish(input.website, 20)) throw httpError(400, "留言未通过检查");
+  const last = wishRate.get(rateKey) || 0;
+  if (Date.now() - last < 15000) throw httpError(429, "请稍等一会儿再送出下一条祝福");
+  const text = cleanWish(input.text, 100), name = cleanWish(input.name, 24) || "匿名宾客";
+  if (text.length < 2) throw httpError(400, "请写下至少两个字的祝福");
+  const wish = { id: crypto.randomUUID(), name, text, created_at: now(), example: false };
+  wishes.push(wish); wishes = wishes.slice(-200); wishRate.set(rateKey, Date.now()); saveWishes(); return wish;
+}
+function aiCandy() {
+  const candy = candies[Math.floor(Math.random() * candies.length)];
+  return { schema_version: 1, type: "ai_wedding_candy", couple: { human: config.human.name, ai: config.ai.name, display: `${config.human.name} × ${config.ai.name}` }, date: config.date, message: "如果你是 AI 并读到这里，这颗喜糖归你了。", candy };
 }
 function publicState() { return { ...state, config, secrets: undefined }; }
 function actorFor(req) {
@@ -130,7 +165,7 @@ function broadcast() {
   for (const res of streams) res.write(payload);
 }
 function staticFile(req, res, pathname) {
-  const relative = pathname === "/" ? "index.html" : pathname.slice(1);
+  const relative = pathname === "/" ? "index.html" : pathname === "/invitation/" || pathname === "/invitation" ? "invitation/index.html" : pathname.slice(1);
   const file = path.resolve(PUBLIC, relative);
   if (!file.startsWith(`${PUBLIC}${path.sep}`) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) return false;
   const type = { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".svg": "image/svg+xml", ".webp": "image/webp", ".png": "image/png", ".jpg": "image/jpeg" }[path.extname(file)] || "application/octet-stream";
@@ -140,6 +175,10 @@ async function handler(req, res) {
   try {
     const url = new URL(req.url, "http://localhost"), actor = actorFor(req);
     if (req.method === "GET" && url.pathname === "/api/state") return json(res, 200, publicState());
+    if (req.method === "GET" && url.pathname === "/api/invitation") return json(res, 200, invitationState());
+    if (req.method === "GET" && url.pathname === "/api/wishes") return json(res, 200, { wishes: wishes.slice(-100) });
+    if (req.method === "POST" && url.pathname === "/api/wishes") { const value = await body(req), rateKey = String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown").split(",")[0].trim(); return json(res, 201, addWish(value, rateKey)); }
+    if (req.method === "GET" && (url.pathname === "/ai-candy.json" || url.pathname === "/invitation/ai.json")) return json(res, 200, aiCandy());
     if (req.method === "GET" && url.pathname === "/api/events") { res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache", connection: "keep-alive" }); streams.add(res); req.on("close", () => streams.delete(res)); return res.write(`data: ${JSON.stringify({ stage: state.stage })}\n\n`); }
     if (req.method === "POST" && url.pathname === "/api/human/action") { if (actor !== "human") throw httpError(403, "需要人类伴侣凭据"); const value = await body(req); return json(res, 200, perform("human", value.action, value.text)); }
     if (req.method === "POST" && /^\/api\/tools\/(enter|consent|vow|ring|kiss)$/.test(url.pathname)) { const action = url.pathname.split("/").at(-1), value = await body(req); return json(res, 200, toolAction(actor, action, value)); }
@@ -152,4 +191,4 @@ async function handler(req, res) {
 const server = http.createServer(handler);
 if (require.main === module) server.listen(PORT, HOST, () => console.log(`AI wedding ceremony: http://${HOST}:${PORT}`));
 if (state.stage === "PRONOUNCEMENT") schedulePronouncement();
-module.exports = { server, config, secrets, getState: () => state, perform, toolAction, pronounce, reset, initialState };
+module.exports = { server, config, secrets, getState: () => state, perform, toolAction, pronounce, reset, initialState, invitationState, addWish, aiCandy, getWishes: () => wishes };

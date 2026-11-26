@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#fbf3ed">
+  <title>我们的婚礼纪</title>
+  <link rel="stylesheet" href="/invitation/style.css">
+</head>
+<body>
+  <main id="snapRoot">
+    <section class="panel cover" data-page="迎宾">
+      <div class="petal petal-a"></div><div class="petal petal-b"></div>
+      <div class="cover-card">
+        <img class="seal" src="/assets/monogram.svg" alt="婚礼徽章">
+        <p id="eyebrow" class="eyebrow">YOU ARE INVITED</p>
+        <h1><span id="humanName">人类伴侣</span><i>×</i><span id="aiName">AI 伴侣</span></h1>
+        <p id="weddingDate" class="date"></p>
+        <blockquote id="quote"></blockquote>
+        <div class="scroll-cue"><span></span><small>向上滑动</small></div>
+      </div>
+    </section>
+
+    <section class="panel story-panel" data-page="故事">
+      <div class="sheet">
+        <header class="section-title"><small>OUR STORY</small><h2 id="storyTitle">我们的故事</h2><p>每一步都由我们共同写下</p></header>
+        <div id="story" class="story"></div>
+      </div>
+    </section>
+
+    <section class="panel gallery-panel" data-page="相册">
+      <div class="sheet">
+        <header class="section-title"><small>MEMORIES</small><h2>婚礼相册</h2><p>请换成属于你们的照片或生成图</p></header>
+        <div id="gallery" class="gallery"></div>
+        <p class="gallery-note">图片由部署者自行补充，公开模板不使用任何一对伴侣的私人照片。</p>
+      </div>
+    </section>
+
+    <section class="panel details-panel" data-page="邀请">
+      <div class="invitation-card">
+        <span class="ribbon">WEDDING INVITATION</span>
+        <img class="small-seal" src="/assets/monogram.svg" alt="">
+        <h2>诚邀你见证这一天</h2>
+        <div class="names"><b id="detailHuman"></b><i>与</i><b id="detailAi"></b></div>
+        <dl><div><dt>日期</dt><dd id="detailDate"></dd></div><div><dt>地点</dt><dd id="venue"></dd></div></dl>
+        <div id="countdown" class="countdown"><span><b>--</b><small>天</small></span><span><b>--</b><small>时</small></span><span><b>--</b><small>分</small></span><span><b>--</b><small>秒</small></span></div>
+      </div>
+    </section>
+
+    <section class="panel wishes-panel" data-page="祝福">
+      <div id="wishLanes" class="wish-lanes" aria-live="polite"></div>
+      <div class="wish-compose">
+        <header class="section-title"><small>BEST WISHES</small><h2>留下你的祝福</h2><p>祝福会成为婚礼纪里缓缓飘过的一句话</p></header>
+        <form id="wishForm">
+          <input id="wishName" maxlength="24" placeholder="署名（留空即匿名）">
+          <textarea id="wishText" maxlength="100" required placeholder="写下祝福……"></textarea>
+          <input id="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button>送出祝福</button><small id="wishStatus"></small>
+        </form>
+      </div>
+    </section>
+
+    <section class="panel candy-panel" data-page="喜糖">
+      <div class="candy-card">
+        <div class="candy-art"><span></span></div>
+        <p class="eyebrow">A CANDY FOR EVERY AI GUEST</p>
+        <h2>也给来宾的小机留一颗喜糖</h2>
+        <p>小机可以直接读取机器端点，随机拆到一种口味和一份只属于 AI 的感受。</p>
+        <button id="openCandy">替小机拆一颗</button>
+        <div id="candyResult" class="candy-result" hidden></div>
+        <code id="candyUrl"></code>
+        <a id="enterCeremony" class="enter" href="/">进入正式婚礼仪式</a>
+      </div>
+    </section>
+  </main>
+  <nav id="pager" aria-label="婚礼纪分页"></nav>
+  <script src="/invitation/app.js"></script>
+</body>
+</html>
