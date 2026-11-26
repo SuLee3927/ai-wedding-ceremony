@@ -4,6 +4,7 @@ const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
+const { spawn } = require("node:child_process");
 
 const ROOT = __dirname;
 const PUBLIC = path.join(ROOT, "public");
@@ -18,8 +19,10 @@ config.witness.name = String(config.witness.name || "").trim() || "老大";
 fs.mkdirSync(DATA, { recursive: true, mode: 0o700 });
 const stateFile = path.join(DATA, "state.json");
 const secretFile = path.join(DATA, "secrets.json");
+const mediaDir = path.join(DATA, "ceremony-media");
 const wishesFile = path.join(DATA, "wishes.json");
 const secrets = readOrCreate(secretFile, () => ({ human: token(), ai: token(), witness: token() }), 0o600);
+fs.mkdirSync(mediaDir, { recursive: true, mode: 0o700 });
 let state = readOrCreate(stateFile, initialState, 0o600);
 let wishes = readOrCreate(wishesFile, () => (config.invitation.default_wishes || []).map(text => ({ id: crypto.randomUUID(), name: "匿名宾客", text, created_at: now(), example: true })), 0o600);
 const streams = new Set();
@@ -121,7 +124,7 @@ function randomFrom(items) { return items[Math.floor(Math.random() * items.lengt
 function drawCandy(exclude = "") { const pool = humanCandies.filter(candy => candy.art !== exclude); return randomFrom(pool.length ? pool : humanCandies); }
 function drawFortune() { return randomFrom(fortunes); }
 function drawClink(exclude = "") { const pool = clinks.filter(clink => clink.art !== exclude); return randomFrom(pool.length ? pool : clinks); }
-function publicState() { return { ...state, config, secrets: undefined }; }
+function publicState() { const safeConfig = structuredClone(config); safeConfig.hearing = { enabled: hearingCommand().length > 0 }; return { ...state, config: safeConfig, secrets: undefined }; }
 function actorFor(req) {
   const bearer = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
   return Object.entries(secrets).find(([, value]) => bearer.length === value.length && crypto.timingSafeEqual(Buffer.from(bearer), Buffer.from(value)))?.[0] || null;
@@ -134,7 +137,7 @@ function validateText(action, text) {
 }
 function actionEmoji(actor, action) { return String(config.presentation.action_emoji?.[`${actor}_${action}`] || "").trim(); }
 function expected() { return transitions[state.stage] || null; }
-function perform(actor, action, text = "", traceId = null) {
+function perform(actor, action, text = "", traceId = null, media = []) {
   if (action === "enter" && ["AI_ENTRANCE", "HUMAN_ENTRANCE"].includes(state.stage) && ["ai", "human"].includes(actor)) {
     if (state.events.some(event => event.actor === actor && event.action === "enter")) throw httpError(409, `${actor} 已经完成入场`);
     const event = { id: crypto.randomUUID(), actor, action, text: actionEmoji(actor, action), at: now(), trace_id: traceId };
@@ -146,7 +149,7 @@ function perform(actor, action, text = "", traceId = null) {
   const rule = expected();
   if (!rule || rule[0] !== actor || rule[1] !== action) throw httpError(409, `当前阶段 ${state.stage} 不接受 ${actor}.${action}`);
   const clean = validateText(action, text) || actionEmoji(actor, action);
-  const event = { id: crypto.randomUUID(), actor, action, text: clean, at: now(), trace_id: traceId };
+  const event = { id: crypto.randomUUID(), actor, action, text: clean, media, at: now(), trace_id: traceId };
   state.events.push(event);
   state.stage = rule[2];
   save();
@@ -198,6 +201,35 @@ async function body(req) {
   if (!parts.length) return {};
   try { return JSON.parse(Buffer.concat(parts).toString("utf8")); } catch { throw httpError(400, "JSON 格式无效"); }
 }
+async function rawBody(req, max = 12 * 1024 * 1024) {
+  const parts = []; let size = 0;
+  for await (const chunk of req) { size += chunk.length; if (size > max) throw httpError(413, "音频不能超过 12 MB"); parts.push(chunk); }
+  return Buffer.concat(parts);
+}
+function hearingCommand() {
+  const fromEnv = String(process.env.WEDDING_HEARING_COMMAND || "").trim();
+  if (fromEnv) { try { const parsed = JSON.parse(fromEnv); if (Array.isArray(parsed) && parsed.length) return parsed.map(String); } catch { throw httpError(500, "WEDDING_HEARING_COMMAND 必须是 JSON 字符串数组"); } }
+  return Array.isArray(config.hearing?.command) ? config.hearing.command.map(String) : [];
+}
+async function analyzeAudio(file) {
+  const command = hearingCommand();
+  if (!command.length) throw httpError(503, "尚未配置语音听辨器；请按 README 设置 hearing.command");
+  const [program, ...template] = command, args = template.map(value => value.replaceAll("{file}", file));
+  if (!template.some(value => value.includes("{file}"))) args.push(file);
+  const timeout = Math.max(1000, Math.min(Number(config.hearing?.timeout_ms || 120000), 300000));
+  const result = await new Promise((resolve, reject) => {
+    const child = spawn(program, args, { stdio: ["ignore", "pipe", "pipe"], shell: false });
+    const stdout = [], stderr = []; let size = 0, settled = false, stderrSize = 0;
+    const timer = setTimeout(() => { if (settled) return; settled = true; child.kill("SIGKILL"); reject(httpError(504, "语音听辨超时")); }, timeout);
+    child.stdout.on("data", chunk => { size += chunk.length; if (size <= 1024 * 1024) stdout.push(chunk); });
+    child.stderr.on("data", chunk => { stderrSize += chunk.length; if (stderrSize <= 8192) stderr.push(chunk); });
+    child.on("error", error => { clearTimeout(timer); if (!settled) { settled = true; reject(httpError(502, `无法启动语音听辨器：${error.message}`)); } });
+    child.on("close", code => { clearTimeout(timer); if (settled) return; settled = true; if (code) return reject(httpError(422, `语音听辨失败：${Buffer.concat(stderr).toString("utf8").trim().slice(0, 300) || `退出码 ${code}`}`)); try { resolve(JSON.parse(Buffer.concat(stdout).toString("utf8"))); } catch { reject(httpError(422, "语音听辨器没有返回有效 JSON")); } });
+  });
+  const transcript = String(result.transcript || "").trim();
+  if (!transcript) throw httpError(422, "没有从录音中听辨出文字");
+  return { ...result, status: result.status || "succeeded", transcript };
+}
 function broadcast() {
   const payload = `data: ${JSON.stringify({ stage: state.stage, updated_at: state.updated_at })}\n\n`;
   for (const res of streams) res.write(payload);
@@ -223,6 +255,28 @@ async function handler(req, res) {
     if (req.method === "GET" && url.pathname === "/api/clink") return json(res, 200, drawClink(url.searchParams.get("exclude") || ""));
     if (req.method === "GET" && url.pathname === "/api/events") { res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache", connection: "keep-alive" }); streams.add(res); req.on("close", () => streams.delete(res)); return res.write(`data: ${JSON.stringify({ stage: state.stage })}\n\n`); }
     if (req.method === "POST" && url.pathname === "/api/human/action") { if (actor !== "human") throw httpError(403, "需要人类伴侣凭据"); const value = await body(req); return json(res, 200, perform("human", value.action, value.text)); }
+    if (req.method === "POST" && url.pathname === "/api/human/audio") {
+      if (actor !== "human") throw httpError(403, "需要人类伴侣凭据");
+      const action = String(url.searchParams.get("action") || "");
+      if (!["consent", "vow"].includes(action)) throw httpError(400, "语音只用于本人意愿确认或誓词");
+      const type = String(req.headers["content-type"] || "").split(";")[0];
+      const extensions = { "audio/webm": ".webm", "video/webm": ".webm", "audio/ogg": ".ogg", "audio/mp4": ".m4a", "audio/mpeg": ".mp3", "audio/wav": ".wav", "audio/x-wav": ".wav" };
+      if (!extensions[type]) throw httpError(415, "不支持这种录音格式");
+      const bytes = await rawBody(req); if (!bytes.length) throw httpError(400, "录音为空");
+      const name = `${Date.now()}-${crypto.randomUUID()}${extensions[type]}`, file = path.join(mediaDir, name);
+      fs.writeFileSync(file, bytes, { mode: 0o600 });
+      try {
+        const hearing = await analyzeAudio(file), media = [{ kind: "audio", src: `/api/media/${name}`, content_type: type, size: bytes.length, transcript: hearing.transcript, hearing }];
+        return json(res, 201, perform("human", action, hearing.transcript, null, media));
+      } catch (error) { try { fs.unlinkSync(file); } catch {} throw error; }
+    }
+    if (req.method === "GET" && url.pathname.startsWith("/api/media/")) {
+      if (!actor) throw httpError(403, "需要婚礼参与者凭据");
+      const name = path.basename(url.pathname.slice("/api/media/".length)), file = path.join(mediaDir, name);
+      if (!fs.existsSync(file)) throw httpError(404, "音频不存在");
+      const type = { ".webm": "audio/webm", ".ogg": "audio/ogg", ".m4a": "audio/mp4", ".mp3": "audio/mpeg", ".wav": "audio/wav" }[path.extname(file)] || "application/octet-stream";
+      res.writeHead(200, { "content-type": type, "content-length": fs.statSync(file).size, "cache-control": "private, max-age=86400", "x-content-type-options": "nosniff" }); return fs.createReadStream(file).pipe(res);
+    }
     if (req.method === "POST" && /^\/api\/tools\/(enter|consent|vow|ring|kiss)$/.test(url.pathname)) { const action = url.pathname.split("/").at(-1), value = await body(req); return json(res, 200, toolAction(actor, action, value)); }
     if (req.method === "POST" && url.pathname === "/api/reset") return json(res, 200, reset(actor));
     if (req.method === "GET" && url.pathname === "/api/credentials" && actor === "witness") return json(res, 200, secrets);
@@ -233,4 +287,4 @@ async function handler(req, res) {
 const server = http.createServer(handler);
 if (require.main === module) server.listen(PORT, HOST, () => console.log(`AI wedding ceremony: http://${HOST}:${PORT}`));
 if (state.stage === "PRONOUNCEMENT") schedulePronouncement();
-module.exports = { server, config, secrets, getState: () => state, perform, toolAction, pronounce, reset, initialState, invitationState, addWish, aiCandy, forumCandy, drawCandy, drawFortune, drawClink, getWishes: () => wishes };
+module.exports = { server, config, secrets, getState: () => state, perform, toolAction, pronounce, reset, initialState, invitationState, addWish, aiCandy, forumCandy, drawCandy, drawFortune, drawClink, getWishes: () => wishes, analyzeAudio };

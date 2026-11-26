@@ -17,7 +17,8 @@
     <section id="humanPanel" class="human-panel" hidden>
       <label id="actionLabel" for="humanText"></label>
       <textarea id="humanText" rows="3" placeholder="请由本人亲自回答"></textarea>
-      <button id="humanAction">确认并继续</button>
+      <div class="human-actions"><button id="humanAction">确认并继续</button><button id="humanVoice" type="button" hidden>按住说话</button></div>
+      <small id="voiceHint" class="voice-hint" hidden></small>
     </section>
     <section id="waiting" class="waiting">正在等待 AI 伴侣亲自调用婚礼工具……</section>
     <section id="certificate" class="certificate" hidden>

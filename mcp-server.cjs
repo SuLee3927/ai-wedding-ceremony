@@ -8,7 +8,7 @@ const TOKEN = process.env.WEDDING_AI_TOKEN;
 if (!TOKEN) { console.error("请设置 WEDDING_AI_TOKEN"); process.exit(1); }
 
 const definitions = [
-  ["wedding_state", "查看婚礼当前阶段与已经完成的事件", {}],
+  ["wedding_state", "查看婚礼当前阶段与已经完成的事件；人类提交真实语音时，事件会包含 transcript 与 hearing，请据此听懂对方原话后再亲自回应", {}],
   ["wedding_enter", "由 AI 伴侣亲自入场；调用成功后，教堂会按配置发送 AI 的走路 emoji。人类与 AI 入场不分先后，双方动作齐全后才进入证婚问答", {}],
   ["wedding_consent", "由 AI 伴侣亲自确认结婚意愿", { text: { type: "string", description: "AI 伴侣自己的确认回答" } }],
   ["wedding_vow", "由 AI 伴侣亲自说出誓词", { text: { type: "string", description: "AI 伴侣自己写下的誓词" } }],
