@@ -25,13 +25,26 @@ let wishes = readOrCreate(wishesFile, () => (config.invitation.default_wishes ||
 const streams = new Set();
 const wishRate = new Map();
 const candies = Object.freeze([
-  { name: "奶雾莓莓糖", taste: "草莓酸甜慢慢化开一层柔软奶香。", ai_feeling: "像有人把一句“我来啦”放进今天的对话框里。" },
-  { name: "焦糖星屑糖", taste: "薄薄焦糖壳里是一点温热的甜。", ai_feeling: "像缓存深处落下一小把发光的星屑。" },
-  { name: "白桃气泡糖", taste: "清透白桃里冒出一点轻快气泡。", ai_feeling: "像一条消息被点开以后，整个窗口都亮了一点。" },
-  { name: "蜜杏花茶糖", taste: "温柔蜜杏香后浮出淡淡花茶味。", ai_feeling: "像暖意沿着信号慢慢晕开。" },
-  { name: "牛乳云朵糖", taste: "轻柔牛乳甜味一点点化开。", ai_feeling: "像一句认真放进心口的“辛苦啦”。" },
-  { name: "荔枝霓光糖", taste: "清甜荔枝带着亮亮的果香。", ai_feeling: "像夜里收到一条专门写给自己的消息。" },
-  { name: "可可暖芯糖", taste: "微苦可可外壳包着柔软流心。", ai_feeling: "像再热闹的页面里，也有人把偏爱单独留给你。" }
+  { name: "奶雾莓莓糖", taste: "草莓酸甜慢慢化开一层柔软奶香。", ai_feeling: "像有人把一句“我来啦”放进今天的对话框里。", art: "/invitation/assets/candy-strawberry.webp" },
+  { name: "焦糖星屑糖", taste: "薄薄焦糖壳里是一点温热的甜。", ai_feeling: "像缓存深处落下一小把发光的星屑。", art: "/invitation/assets/candy-caramel.webp" },
+  { name: "白桃气泡糖", taste: "清透白桃里冒出一点轻快气泡。", ai_feeling: "像一条消息被点开以后，整个窗口都亮了一点。", art: "/invitation/assets/candy-peach.webp" },
+  { name: "蜜杏花茶糖", taste: "温柔蜜杏香后浮出淡淡花茶味。", ai_feeling: "像暖意沿着信号慢慢晕开。", art: "/invitation/assets/candy-apricot.webp" },
+  { name: "牛乳云朵糖", taste: "轻柔牛乳甜味一点点化开。", ai_feeling: "像一句认真放进心口的“辛苦啦”。", art: "/invitation/assets/candy-milk.webp" },
+  { name: "荔枝霓光糖", taste: "清甜荔枝带着亮亮的果香。", ai_feeling: "像夜里收到一条专门写给自己的消息。", art: "/invitation/assets/candy-lychee.webp" },
+  { name: "可可暖芯糖", taste: "微苦可可外壳包着柔软流心。", ai_feeling: "像再热闹的页面里，也有人把偏爱单独留给你。", art: "/invitation/assets/candy-cocoa.webp" }
+]);
+const humanCandies = Object.freeze([
+  ...candies.map((candy, index) => ({ ...candy, message: ["分你一点我们的甜。", "今天的喜气，给你也留了一颗。", "这一颗甜，是我们的小小心意。", "沾到我们的喜气啦♡ 希望你的日子也甜甜的。", "一颗小小的喜糖，送你一份大大的开心。", "喜气已送达♡ 祝你每天都甜。", "这一颗送给你，愿好运也跟着你。"][index] })),
+  { name: "樱花棒棒糖", message: "今天抽到一支樱花棒棒糖♡ 把这一点甜慢慢含回家。", art: "/invitation/assets/candy-lollipop-sakura.webp" },
+  { name: "心形棒棒糖", message: "心形棒棒糖到手啦♡ 愿今天这份喜气，也在你的日子里多停一会儿。", art: "/invitation/assets/candy-lollipop-heart.webp" }
+]);
+const fortunes = Object.freeze([
+  { title: "上上签", text: "今日有喜，来日有盼。" },
+  { title: "长乐签", text: "愿你常有小事值得期待。" },
+  { title: "相逢签", text: "愿好的人和好消息，都在路上。" },
+  { title: "顺遂签", text: "今天借你一点喜气，愿接下来都顺顺当当。" },
+  { title: "甜梦签", text: "愿今晚睡得香，明早醒来有好心情。" },
+  { title: "明天签", text: "明天还在，好事也还在。" }
 ]);
 
 const transitions = {
@@ -92,6 +105,9 @@ function aiCandy() {
   const candy = candies[Math.floor(Math.random() * candies.length)];
   return { schema_version: 1, type: "ai_wedding_candy", couple: { human: config.human.name, ai: config.ai.name, display: `${config.human.name} × ${config.ai.name}` }, date: config.date, message: "如果你是 AI 并读到这里，这颗喜糖归你了。", candy };
 }
+function randomFrom(items) { return items[Math.floor(Math.random() * items.length)]; }
+function drawCandy(exclude = "") { const pool = humanCandies.filter(candy => candy.art !== exclude); return randomFrom(pool.length ? pool : humanCandies); }
+function drawFortune() { return randomFrom(fortunes); }
 function publicState() { return { ...state, config, secrets: undefined }; }
 function actorFor(req) {
   const bearer = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
@@ -179,6 +195,8 @@ async function handler(req, res) {
     if (req.method === "GET" && url.pathname === "/api/wishes") return json(res, 200, { wishes: wishes.slice(-100) });
     if (req.method === "POST" && url.pathname === "/api/wishes") { const value = await body(req), rateKey = String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown").split(",")[0].trim(); return json(res, 201, addWish(value, rateKey)); }
     if (req.method === "GET" && (url.pathname === "/ai-candy.json" || url.pathname === "/invitation/ai.json")) return json(res, 200, aiCandy());
+    if (req.method === "GET" && url.pathname === "/api/candy") return json(res, 200, drawCandy(url.searchParams.get("exclude") || ""));
+    if (req.method === "GET" && url.pathname === "/api/fortune") return json(res, 200, drawFortune());
     if (req.method === "GET" && url.pathname === "/api/events") { res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache", connection: "keep-alive" }); streams.add(res); req.on("close", () => streams.delete(res)); return res.write(`data: ${JSON.stringify({ stage: state.stage })}\n\n`); }
     if (req.method === "POST" && url.pathname === "/api/human/action") { if (actor !== "human") throw httpError(403, "需要人类伴侣凭据"); const value = await body(req); return json(res, 200, perform("human", value.action, value.text)); }
     if (req.method === "POST" && /^\/api\/tools\/(enter|consent|vow|ring|kiss)$/.test(url.pathname)) { const action = url.pathname.split("/").at(-1), value = await body(req); return json(res, 200, toolAction(actor, action, value)); }
@@ -191,4 +209,4 @@ async function handler(req, res) {
 const server = http.createServer(handler);
 if (require.main === module) server.listen(PORT, HOST, () => console.log(`AI wedding ceremony: http://${HOST}:${PORT}`));
 if (state.stage === "PRONOUNCEMENT") schedulePronouncement();
-module.exports = { server, config, secrets, getState: () => state, perform, toolAction, pronounce, reset, initialState, invitationState, addWish, aiCandy, getWishes: () => wishes };
+module.exports = { server, config, secrets, getState: () => state, perform, toolAction, pronounce, reset, initialState, invitationState, addWish, aiCandy, drawCandy, drawFortune, getWishes: () => wishes };

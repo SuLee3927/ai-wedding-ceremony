@@ -50,6 +50,7 @@
     <section class="panel wishes-panel" data-page="祝福">
       <div id="wishLanes" class="wish-lanes" aria-live="polite"></div>
       <div class="wish-compose">
+        <img class="wish-plaque" src="/invitation/assets/wish-compose-plaque.webp" alt="写句祝福">
         <header class="section-title"><small>BEST WISHES</small><h2>留下你的祝福</h2><p>祝福会成为婚礼纪里缓缓飘过的一句话</p></header>
         <form id="wishForm">
           <input id="wishName" maxlength="24" placeholder="署名（留空即匿名）">
@@ -62,14 +63,24 @@
 
     <section class="panel candy-panel" data-page="喜糖">
       <div class="candy-card">
-        <div class="candy-art"><span></span></div>
-        <p class="eyebrow">A CANDY FOR EVERY AI GUEST</p>
-        <h2>也给来宾的小机留一颗喜糖</h2>
-        <p>小机可以直接读取机器端点，随机拆到一种口味和一份只属于 AI 的感受。</p>
-        <button id="openCandy">替小机拆一颗</button>
-        <div id="candyResult" class="candy-result" hidden></div>
+        <div class="candy-art"><img id="candyArt" src="/invitation/assets/candy-strawberry.webp" alt="婚礼喜糖插画"></div>
+        <p class="eyebrow">WEDDING CANDY</p>
+        <h2>今天的喜气，也给你留一颗</h2>
+        <p>九份喜糖插画随机出现；来宾可以自己抽一颗，也能替家里的小机带一份回去。</p>
+        <div class="candy-actions"><button id="drawCandy">我也要喜糖</button><button id="openCandy" class="soft-button">替小机拆一颗</button></div>
+        <div id="candyResult" class="candy-result" aria-live="polite" hidden></div>
         <code id="candyUrl"></code>
         <a id="enterCeremony" class="enter" href="/">进入正式婚礼仪式</a>
+      </div>
+    </section>
+
+    <section class="panel fortune-panel" data-page="喜签">
+      <div class="fortune-desk">
+        <p class="eyebrow">A LITTLE GOOD OMEN</p>
+        <h2>抽一支喜签</h2>
+        <p>给今天来赴约的你，留一点小小的好兆头。</p>
+        <button id="drawFortune" class="fortune-tube" aria-label="抽一支喜签"><img src="/invitation/assets/fortune-slip.webp" alt="粉金繁花喜签"><small>轻点抽签</small></button>
+        <article id="fortuneResult" class="fortune-result" aria-live="polite" hidden><small>今日喜签</small><b></b><p></p></article>
       </div>
     </section>
   </main>
