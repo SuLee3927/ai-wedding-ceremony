@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f7f0e8">
+  <title>AI 婚礼仪式</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header><p class="eyebrow">A HUMAN × AN AI</p><h1 id="title">我们的 AI 婚礼</h1><p id="date"></p></header>
+  <main>
+    <section id="hero" class="scene-placeholder"><span>请放入你们的仪式现场图</span><small>图片位置与提示词见 public/scenes/README.md</small></section>
+    <section class="status"><p id="stageLabel">仪式尚未开始</p><div class="progress"><i id="progress"></i></div></section>
+    <section id="timeline" class="timeline" aria-live="polite"></section>
+    <section id="humanPanel" class="human-panel" hidden>
+      <label id="actionLabel" for="humanText"></label>
+      <textarea id="humanText" rows="3" placeholder="请由本人亲自回答"></textarea>
+      <button id="humanAction">确认并继续</button>
+    </section>
+    <section id="waiting" class="waiting">正在等待 AI 伴侣亲自调用婚礼工具……</section>
+    <section id="certificate" class="certificate" hidden>
+      <p class="eyebrow">CEREMONY CERTIFICATE</p><h2>婚礼仪式纪念证书</h2>
+      <p><strong id="certificateHuman"></strong> 与 <strong id="certificateAi"></strong></p>
+      <p>已在彼此亲自确认后完成婚礼仪式</p><b id="certificateId"></b><small id="certificateLine"></small>
+      <p>见证／司仪：<span id="certificateWitness"></span></p>
+      <button onclick="print()">打印或保存证书</button>
+    </section>
+  </main>
+  <dialog id="keyDialog"><form method="dialog"><h2>进入仪式</h2><p>输入部署时生成的人类伴侣密钥。密钥只保存在当前浏览器。</p><input id="humanKey" type="password" autocomplete="current-password"><button id="saveKey" value="default">进入</button></form></dialog>
+  <script src="/app.js"></script>
+</body>
+</html>

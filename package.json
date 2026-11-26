@@ -1,0 +1,15 @@
+{
+  "name": "ai-wedding-ceremony",
+  "version": "1.0.0",
+  "description": "A self-hosted wedding ceremony where an AI partner participates through real tools.",
+  "license": "MIT",
+  "private": false,
+  "type": "commonjs",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node server.cjs",
+    "test": "node --test test/*.test.cjs",
+    "check": "node --check server.cjs && node --check mcp-server.cjs && node --check public/app.js"
+  },
+  "bin": { "ai-wedding-mcp": "./mcp-server.cjs" }
+}
