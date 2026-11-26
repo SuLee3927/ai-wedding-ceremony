@@ -132,11 +132,20 @@ function validateText(action, text) {
   if (value.length > 4000) throw httpError(400, "文字过长");
   return value;
 }
+function actionEmoji(actor, action) { return String(config.presentation.action_emoji?.[`${actor}_${action}`] || "").trim(); }
 function expected() { return transitions[state.stage] || null; }
 function perform(actor, action, text = "", traceId = null) {
+  if (action === "enter" && ["AI_ENTRANCE", "HUMAN_ENTRANCE"].includes(state.stage) && ["ai", "human"].includes(actor)) {
+    if (state.events.some(event => event.actor === actor && event.action === "enter")) throw httpError(409, `${actor} 已经完成入场`);
+    const event = { id: crypto.randomUUID(), actor, action, text: actionEmoji(actor, action), at: now(), trace_id: traceId };
+    state.events.push(event);
+    const bothEntered = ["ai", "human"].every(who => state.events.some(item => item.actor === who && item.action === "enter"));
+    state.stage = bothEntered ? "AI_CONSENT" : actor === "ai" ? "HUMAN_ENTRANCE" : "AI_ENTRANCE";
+    save(); return event;
+  }
   const rule = expected();
   if (!rule || rule[0] !== actor || rule[1] !== action) throw httpError(409, `当前阶段 ${state.stage} 不接受 ${actor}.${action}`);
-  const clean = validateText(action, text);
+  const clean = validateText(action, text) || actionEmoji(actor, action);
   const event = { id: crypto.randomUUID(), actor, action, text: clean, at: now(), trace_id: traceId };
   state.events.push(event);
   state.stage = rule[2];

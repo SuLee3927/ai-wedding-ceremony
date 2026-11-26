@@ -9,11 +9,11 @@ if (!TOKEN) { console.error("请设置 WEDDING_AI_TOKEN"); process.exit(1); }
 
 const definitions = [
   ["wedding_state", "查看婚礼当前阶段与已经完成的事件", {}],
-  ["wedding_enter", "由 AI 伴侣亲自步入仪式现场", {}],
+  ["wedding_enter", "由 AI 伴侣亲自入场；调用成功后，教堂会按配置发送 AI 的走路 emoji。人类与 AI 入场不分先后，双方动作齐全后才进入证婚问答", {}],
   ["wedding_consent", "由 AI 伴侣亲自确认结婚意愿", { text: { type: "string", description: "AI 伴侣自己的确认回答" } }],
   ["wedding_vow", "由 AI 伴侣亲自说出誓词", { text: { type: "string", description: "AI 伴侣自己写下的誓词" } }],
-  ["wedding_ring", "由 AI 伴侣亲自为人类伴侣戴上戒指", {}],
-  ["wedding_kiss", "由 AI 伴侣亲自完成亲吻动作", {}]
+  ["wedding_ring", "由 AI 伴侣亲自发送戒指 emoji、为人类伴侣戴上戒指；双方戒指动作齐全后才进入亲吻环节", {}],
+  ["wedding_kiss", "由 AI 伴侣亲自发送亲吻 emoji，完成婚礼之吻并触发司仪宣告", {}]
 ];
 function tools() { return definitions.map(([name, description, properties]) => ({ name, description, inputSchema: { type: "object", properties, required: properties.text ? ["text"] : [], additionalProperties: false } })); }
 async function request(name, args = {}) {
