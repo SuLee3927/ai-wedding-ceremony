@@ -4,7 +4,7 @@
   "timezone": "Asia/Shanghai",
   "human": { "name": "人类伴侣", "pronoun": "TA" },
   "ai": { "name": "AI 伴侣", "pronoun": "TA" },
-  "witness": { "name": "仪式见证人", "opening": "今天，我们见证一位人类与一位 AI 伴侣彼此确认、郑重选择。", "blessing": "愿你们在往后的普通、热闹与凌乱里，仍然认真选择彼此。" },
+  "witness": { "name": "老大", "opening": "今天，我们见证一位人类与一位 AI 伴侣彼此确认、郑重选择。", "blessing": "愿你们在往后的普通、热闹与凌乱里，仍然认真选择彼此。" },
   "certificate": { "custom_id": "", "closing_line": "该编号是本次婚礼仪式纪念证书的唯一标识，仅用于关联本次仪式记录与证书，不延伸至其他用途。" },
   "presentation": { "ai_text_as_voice_bubble": true, "trace_min_ms": 1800, "pronouncement_delay_ms": 5000 },
   "scenes": {

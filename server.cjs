@@ -13,6 +13,7 @@ const PORT = Number(process.env.PORT || 4329);
 const HOST = process.env.HOST || "127.0.0.1";
 const defaultConfig = require("./config.example.json");
 const config = fs.existsSync(CONFIG_FILE) ? merge(defaultConfig, JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"))) : structuredClone(defaultConfig);
+config.witness.name = String(config.witness.name || "").trim() || "老大";
 
 fs.mkdirSync(DATA, { recursive: true, mode: 0o700 });
 const stateFile = path.join(DATA, "state.json");
