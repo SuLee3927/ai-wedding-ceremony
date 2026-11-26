@@ -18,6 +18,16 @@
 .candy-art img{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 12px 22px rgba(132,76,88,.16))}
 .candy-actions{display:flex;justify-content:center;gap:9px;flex-wrap:wrap}
 .candy-card .soft-button{color:#775b43;background:#fff8ed;border:1px solid #d6ba8e}
+.clink-panel{background:linear-gradient(155deg,#eee3df,#e4eee9)}
+.clink-card{width:min(620px,94vw);padding:42px;text-align:center;border:1px solid var(--line);border-radius:32px;background:rgba(255,252,248,.92);box-shadow:var(--shadow)}
+.clink-card h2{margin:8px 0;font-size:clamp(30px,7vw,46px);font-weight:400}
+.clink-card>p:not(.eyebrow){color:var(--muted)}
+.clink-button{display:block;width:min(390px,82vw);height:280px;margin:16px auto 8px;padding:0;border:0;background:transparent;-webkit-tap-highlight-color:transparent}
+.clink-button img{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 16px 24px rgba(103,55,62,.17));transition:transform .18s ease}
+.clink-button:active img{transform:scale(.96) rotate(-1deg)}
+.clink-result{max-width:440px;margin:8px auto 0;padding:15px 18px;border-radius:18px;background:#f7ece7}
+.clink-result b{display:block;color:var(--rose);font-size:18px}
+.clink-result p{margin:6px 0 0;line-height:1.7;color:var(--muted)}
 .fortune-panel{background:linear-gradient(rgba(255,249,243,.78),rgba(246,232,224,.9)),url("/assets/botanical-bg.svg") center/cover}
 .fortune-desk{width:min(560px,94vw);min-height:min(680px,88vh);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:42px 24px;text-align:center;border:1px solid rgba(190,151,103,.52);border-radius:34px;background:rgba(255,252,248,.88);box-shadow:var(--shadow)}
 .fortune-desk h2{margin:8px 0;font-size:clamp(32px,7vw,48px);font-weight:400}
@@ -31,4 +41,4 @@
 .fortune-result small{font-size:10px;letter-spacing:.26em;color:#a47e55}
 .fortune-result b{margin:8px 0;font:30px "Songti SC",serif}
 .fortune-result p{margin:0;line-height:1.8}
-@media(max-width:640px){.floating-wish{grid-template-columns:50px auto}.floating-wish>img{width:52px;height:52px}.wish-compose{padding:22px 72px 22px 20px}.wish-plaque{width:61px}.candy-art{height:155px}.fortune-desk{min-height:82vh}}
+@media(max-width:640px){.floating-wish{grid-template-columns:50px auto}.floating-wish>img{width:52px;height:52px}.wish-compose{padding:22px 72px 22px 20px}.wish-plaque{width:61px}.candy-art{height:155px}.clink-card{padding:28px 18px}.clink-button{height:230px}.fortune-desk{min-height:82vh}}

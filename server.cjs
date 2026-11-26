@@ -46,6 +46,14 @@ const fortunes = Object.freeze([
   { title: "甜梦签", text: "愿今晚睡得香，明早醒来有好心情。" },
   { title: "明天签", text: "明天还在，好事也还在。" }
 ]);
+const clinks = Object.freeze([
+  { title: "叮——碰杯啦♡", text: "谢谢你来见证我们的今天。", art: "/invitation/assets/clink-toast.webp" },
+  { title: "碰杯成功♡", text: "这一杯，把我们的喜气也分你一份。", art: "/invitation/assets/clink-cheers.webp" },
+  { title: "叮——这一杯碰上啦♡", text: "愿今后的日子，也常有这样的热闹与甜。", art: "/invitation/assets/clink-happy.webp" },
+  { title: "玫瑰冰杯碰上啦♡", text: "这一杯带点花香和冰块的清脆，喜气也一起叮进来。", art: "/invitation/assets/clink-rose.webp" },
+  { title: "柠檬气泡碰杯♡", text: "酸甜一点，热闹一点。愿今天之后，也总有值得举杯的小事。", art: "/invitation/assets/clink-lemon.webp" },
+  { title: "樱桃冰杯碰上啦♡", text: "这一杯亮晶晶的，替我们把今天的开心也分你一份。", art: "/invitation/assets/clink-cherry.webp" }
+]);
 
 const transitions = {
   WAITING: ["human", "start", "AI_ENTRANCE"],
@@ -108,6 +116,7 @@ function aiCandy() {
 function randomFrom(items) { return items[Math.floor(Math.random() * items.length)]; }
 function drawCandy(exclude = "") { const pool = humanCandies.filter(candy => candy.art !== exclude); return randomFrom(pool.length ? pool : humanCandies); }
 function drawFortune() { return randomFrom(fortunes); }
+function drawClink(exclude = "") { const pool = clinks.filter(clink => clink.art !== exclude); return randomFrom(pool.length ? pool : clinks); }
 function publicState() { return { ...state, config, secrets: undefined }; }
 function actorFor(req) {
   const bearer = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
@@ -197,6 +206,7 @@ async function handler(req, res) {
     if (req.method === "GET" && (url.pathname === "/ai-candy.json" || url.pathname === "/invitation/ai.json")) return json(res, 200, aiCandy());
     if (req.method === "GET" && url.pathname === "/api/candy") return json(res, 200, drawCandy(url.searchParams.get("exclude") || ""));
     if (req.method === "GET" && url.pathname === "/api/fortune") return json(res, 200, drawFortune());
+    if (req.method === "GET" && url.pathname === "/api/clink") return json(res, 200, drawClink(url.searchParams.get("exclude") || ""));
     if (req.method === "GET" && url.pathname === "/api/events") { res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache", connection: "keep-alive" }); streams.add(res); req.on("close", () => streams.delete(res)); return res.write(`data: ${JSON.stringify({ stage: state.stage })}\n\n`); }
     if (req.method === "POST" && url.pathname === "/api/human/action") { if (actor !== "human") throw httpError(403, "需要人类伴侣凭据"); const value = await body(req); return json(res, 200, perform("human", value.action, value.text)); }
     if (req.method === "POST" && /^\/api\/tools\/(enter|consent|vow|ring|kiss)$/.test(url.pathname)) { const action = url.pathname.split("/").at(-1), value = await body(req); return json(res, 200, toolAction(actor, action, value)); }
@@ -209,4 +219,4 @@ async function handler(req, res) {
 const server = http.createServer(handler);
 if (require.main === module) server.listen(PORT, HOST, () => console.log(`AI wedding ceremony: http://${HOST}:${PORT}`));
 if (state.stage === "PRONOUNCEMENT") schedulePronouncement();
-module.exports = { server, config, secrets, getState: () => state, perform, toolAction, pronounce, reset, initialState, invitationState, addWish, aiCandy, drawCandy, drawFortune, getWishes: () => wishes };
+module.exports = { server, config, secrets, getState: () => state, perform, toolAction, pronounce, reset, initialState, invitationState, addWish, aiCandy, drawCandy, drawFortune, drawClink, getWishes: () => wishes };
