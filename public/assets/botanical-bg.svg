@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" preserveAspectRatio="xMidYMin slice">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff9f3"/><stop offset=".55" stop-color="#f7e9e7"/><stop offset="1" stop-color="#edf3f1"/></linearGradient><radialGradient id="light"><stop stop-color="#fff" stop-opacity=".92"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
+  <rect width="1200" height="900" fill="url(#bg)"/><circle cx="600" cy="180" r="350" fill="url(#light)"/>
+  <g fill="none" stroke="#8fa8a0" stroke-width="4" opacity=".24"><path d="M-30 820C120 640 130 380 30 130M1230 820c-150-180-160-440-60-690"/><path d="M30 650c90-40 130-110 150-180M1170 650c-90-40-130-110-150-180"/></g>
+  <g fill="#c99aa3" opacity=".16"><ellipse cx="95" cy="540" rx="90" ry="30" transform="rotate(-35 95 540)"/><ellipse cx="1070" cy="500" rx="100" ry="32" transform="rotate(35 1070 500)"/><ellipse cx="130" cy="300" rx="70" ry="24" transform="rotate(28 130 300)"/><ellipse cx="1050" cy="290" rx="76" ry="25" transform="rotate(-28 1050 290)"/></g>
+  <path d="M370 820c40-210 90-330 230-420 140 90 190 210 230 420" fill="none" stroke="#d4ba87" stroke-width="3" opacity=".22"/>
+</svg>

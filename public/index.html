@@ -8,9 +8,10 @@
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <header><p class="eyebrow">A HUMAN × AN AI</p><h1 id="title">我们的 AI 婚礼</h1><p id="date"></p></header>
+  <header class="topbar"><span class="monogram"><img src="/assets/monogram.svg" alt="人类与 AI 婚礼徽章"></span><div class="topbar-copy"><strong id="headerTitle">我们的 AI 婚礼</strong><small id="date"></small></div></header>
+  <section class="stage-banner"><span class="eyebrow">A HUMAN × AN AI</span><h1 id="stageTitle">两个世界，在这里走向同一天</h1><p>一场由双方亲自完成的婚礼仪式</p></section>
   <main>
-    <section id="hero" class="scene-placeholder"><span>请放入你们的仪式现场图</span><small>图片位置与提示词见 public/scenes/README.md</small></section>
+    <section class="scene-frame"><div id="hero" class="scene-placeholder"><span>请放入你们的仪式现场图</span><small>图片位置与提示词见 public/scenes/README.md</small></div></section>
     <section class="status"><p id="stageLabel">仪式尚未开始</p><div class="progress"><i id="progress"></i></div></section>
     <section id="timeline" class="timeline" aria-live="polite"></section>
     <section id="humanPanel" class="human-panel" hidden>
